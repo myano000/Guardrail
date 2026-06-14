@@ -1,0 +1,18 @@
+root = true
+
+# ===========================================================
+# Guardrail ポリシー設定
+#
+# severity を変更することでルールの強さを調整できます:
+#   error   → ビルドエラー（CI でビルドを失敗させる）
+#   warning → 警告のみ（ビルドは通過）
+#   none    → 無効化
+#
+# ビルドエラーにしているのは "設定がビルドエラー化を制御する" ことの実演です。
+# ===========================================================
+
+[*.cs]
+dotnet_diagnostic.GRD001.severity = error
+dotnet_diagnostic.GRD002.severity = error
+dotnet_diagnostic.GRD003.severity = error
+dotnet_diagnostic.GRD004.severity = error

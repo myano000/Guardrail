@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!--
+      このプロジェクトは故意の違反コードを含む。
+      .editorconfig で GRD*=error に設定しているため、
+      dotnet build samples/Guardrail.Sample.Violations/... を実行すると
+      ビルドエラーになる（それが「正しい挙動」）。
+      Guardrail.sln 全体ビルドからは除外（.sln の .Build.0 エントリなし）。
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Guardrail.Analyzers\Guardrail.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

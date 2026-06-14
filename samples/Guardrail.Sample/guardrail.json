@@ -1,0 +1,23 @@
+{
+  "testMethodMustAssert": {
+    "testAttributes": [
+      "Test", "TestCase", "TestCaseSource",
+      "Theory", "InlineData", "Fact",
+      "TestMethod", "DataTestMethod"
+    ],
+    "assertionTypeNames": [
+      "Assert", "ClassicAssert",
+      "StringAssert", "CollectionAssert",
+      "Warn"
+    ],
+    "assertionMethodPatterns": [
+      "Should"
+    ]
+  },
+  "noRefOutParameter": {
+    "allowedMethods": []
+  },
+  "constructorOnlyAssignments": {
+    "allowedInvocations": []
+  }
+}

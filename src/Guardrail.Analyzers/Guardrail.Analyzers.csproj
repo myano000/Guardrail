@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <!-- アナライザは ImplicitUsings 禁止（Roslyn ホスト上での安定性確保） -->
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <!-- Roslyn アナライザ必須設定 -->
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+    <!-- NuGet 配布設定 -->
+    <IsPackable>true</IsPackable>
+    <!-- アナライザは開発時依存のみ → 参照先プロジェクトのビルド出力には含まれない -->
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <!-- DLL 自体はアナライザとして pack する。通常のビルド出力 (lib/) は不要 -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+
+    <PackageId>Guardrail.Analyzers</PackageId>
+    <Version>1.0.0</Version>
+    <Description>Roslyn analyzers that enforce code policies as build errors (GRD001-GRD004).</Description>
+    <PackageTags>roslyn;analyzer;guardrail;code-policy</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- アナライザの依存はすべて PrivateAssets=all (NuGet グラフに漏らさない) -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- DLL を NuGet の analyzers/dotnet/cs に配置 -->
+    <None Include="$(OutputPath)\$(AssemblyName).dll"
+          Pack="true"
+          PackagePath="analyzers/dotnet/cs"
+          Visible="false" />
+    <!-- RS2008/RS1041 対策: リリーストラッキングファイル -->
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+
+</Project>

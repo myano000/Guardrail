@@ -1,0 +1,35 @@
+<Project>
+  <!--
+    Central Package Management (CPM)
+    パッケージバージョンはここで一元管理します。
+    各 .csproj では <PackageReference Include="..." /> のみ記述（Version 属性不要）。
+    参照: https://learn.microsoft.com/nuget/consume-packages/central-package-management
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup Label="Roslyn アナライザ エンジン">
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                   Version="4.8.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                Version="3.3.4" />
+  </ItemGroup>
+
+  <ItemGroup Label="テストフレームワーク">
+    <PackageVersion Include="Microsoft.NET.Test.Sdk"                          Version="17.12.0" />
+    <PackageVersion Include="NUnit"                                            Version="4.2.2" />
+    <PackageVersion Include="NUnit3TestAdapter"                                Version="4.6.0" />
+    <PackageVersion Include="NUnit.Analyzers"                                  Version="4.4.0" />
+    <PackageVersion Include="coverlet.collector"                               Version="6.0.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="Roslyn アナライザ テストインフラ">
+    <!--
+      CSharpAnalyzerVerifier / CSharpAnalyzerTest を提供。
+      NUnit-specific パッケージ (1.1.2) は Roslyn 1.0.x 向けのため使用しない。
+      代わりに基本パッケージを使い、プロジェクト内で NUnitVerifier を実装する。
+      Microsoft.CodeAnalysis.CSharp (上記) と版を合わせること。
+    -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.4" />
+  </ItemGroup>
+
+</Project>

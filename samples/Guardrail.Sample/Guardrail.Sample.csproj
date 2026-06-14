@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      アナライザを ProjectReference で参照。
+        OutputItemType="Analyzer"        → このプロジェクトのビルド中に Analyzer として動作
+        ReferenceOutputAssembly="false"  → 実行可能アセンブリとしては参照しない
+    -->
+    <ProjectReference Include="..\..\src\Guardrail.Analyzers\Guardrail.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- カスタム設定ファイル: アナライザが AdditionalFiles として読み取る -->
+    <AdditionalFiles Include="guardrail.json" />
+  </ItemGroup>
+
+</Project>

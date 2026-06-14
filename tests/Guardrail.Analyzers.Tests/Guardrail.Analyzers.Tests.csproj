@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="NUnit3TestAdapter" PrivateAssets="all" />
+    <!--
+      Roslyn アナライザ向けテストインフラ (CSharpAnalyzerTest / CSharpAnalyzerVerifier)。
+      NUnit-specific パッケージ (1.1.2) は Roslyn 1.0.x 向けのためここでは使用しない。
+      NUnit Verifier はプロジェクト内の NUnitVerifier.cs で実装する。
+    -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
+    <!--
+      Roslyn バージョン統一: テストプロジェクト内で Guardrail.Analyzers と
+      同じ 4.8.0 を直接参照することで推移的な 1.0.x との衝突を防ぐ。
+    -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      アナライザを通常の ProjectReference で参照。
+      テストコード内で型を直接インスタンス化するため
+      OutputItemType="Analyzer" は指定しない。
+    -->
+    <ProjectReference Include="..\..\src\Guardrail.Analyzers\Guardrail.Analyzers.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="NUnit.Framework" />
+  </ItemGroup>
+
+</Project>
