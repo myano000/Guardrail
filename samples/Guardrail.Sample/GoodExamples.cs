@@ -102,3 +102,78 @@ public class MathHelperTests
         Assert.AreEqual(1, r);
     }
 }
+
+// ----------------------------------------------------------------
+// GRD005 準拠: bool パラメータ禁止
+// ----------------------------------------------------------------
+
+/// <summary>
+/// メール送信サービス。bool フラグの代わりに列挙型で意図を表現する。
+/// </summary>
+public enum MailPriority { Normal, Urgent }
+
+public static class MailService
+{
+    // bool isUrgent の代わりに MailPriority 列挙型を使う（GRD005 準拠）
+    public static void Send(string message, MailPriority priority)
+    {
+        // priority に応じた処理...
+        _ = message;
+        _ = priority;
+    }
+
+    // あるいはメソッドを分割する（GRD005 準拠）
+    public static void SendNormal(string message)  { _ = message; }
+    public static void SendUrgent(string message)  { _ = message; }
+}
+
+// ----------------------------------------------------------------
+// GRD006 準拠: ダウンキャスト禁止（ポリモーフィズムで代替）
+// ----------------------------------------------------------------
+
+/// <summary>
+/// 動物の基底クラス。振る舞いはポリモーフィズムで表現し、
+/// 呼び出し側がダウンキャストしなくて済む設計。
+/// </summary>
+public abstract class Animal
+{
+    public abstract string Speak();
+}
+
+public class GoodDog : Animal
+{
+    public override string Speak() => "Woof";
+}
+
+public class GoodCat : Animal
+{
+    public override string Speak() => "Meow";
+}
+
+public static class AnimalHelper
+{
+    // ダウンキャスト不要: 仮想メソッドに委譲するだけ（GRD006 準拠）
+    public static void MakeSpeak(Animal a) => _ = a.Speak();
+}
+
+// ----------------------------------------------------------------
+// GRD007 準拠: 無意味な null チェック禁止
+// ----------------------------------------------------------------
+
+public static class NullCheckExamples
+{
+    // ← GRD007 準拠: 外部から受け取った値の null チェックは意味がある
+    public static void ProcessName(string? name)
+    {
+        if (name == null) throw new ArgumentNullException(nameof(name));
+        _ = name.Length;
+    }
+
+    // ← GRD007 準拠: ファクトリがnullを返す可能性があるローカルのチェックも意味がある
+    public static void ProcessOrder(string id)
+    {
+        Order? order = id.Length > 0 ? Order.Create(id, 100m) : null;
+        if (order == null) return;   // null になり得る → チェックは意味がある
+        _ = order.Amount;
+    }
+}

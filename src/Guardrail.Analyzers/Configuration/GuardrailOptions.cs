@@ -56,6 +56,15 @@ internal sealed class GuardrailOptions
     /// <summary>コンストラクタ内で許可するメソッド呼び出し名（完全一致）。</summary>
     public IReadOnlyList<string> AllowedCtorInvocations { get; }
 
+    /// <summary>bool パラメータを許可するメソッド名（完全一致）。</summary>
+    public IReadOnlyList<string> BoolParameterAllowedMethods { get; }
+
+    /// <summary>ダウンキャストを除外するファイルパスのパターン（部分一致、大小無視）。</summary>
+    public IReadOnlyList<string> DowncastExcludedFilePatterns { get; }
+
+    /// <summary>ダウンキャストを除外する名前空間のパターン（部分一致、大小無視）。</summary>
+    public IReadOnlyList<string> DowncastExcludedNamespacePatterns { get; }
+
     // ----------------------------------------------------------------
     // コンストラクタ
     // ----------------------------------------------------------------
@@ -65,13 +74,19 @@ internal sealed class GuardrailOptions
         IReadOnlyList<string> assertionTypeNames,
         IReadOnlyList<string> assertionMethodPatterns,
         IReadOnlyList<string> allowedRefOutMethods,
-        IReadOnlyList<string> allowedCtorInvocations)
+        IReadOnlyList<string> allowedCtorInvocations,
+        IReadOnlyList<string> boolParameterAllowedMethods,
+        IReadOnlyList<string> downcastExcludedFilePatterns,
+        IReadOnlyList<string> downcastExcludedNamespacePatterns)
     {
-        TestAttributes           = testAttributes;
-        AssertionTypeNames       = assertionTypeNames;
-        AssertionMethodPatterns  = assertionMethodPatterns;
-        AllowedRefOutMethods     = allowedRefOutMethods;
-        AllowedCtorInvocations   = allowedCtorInvocations;
+        TestAttributes                    = testAttributes;
+        AssertionTypeNames                = assertionTypeNames;
+        AssertionMethodPatterns           = assertionMethodPatterns;
+        AllowedRefOutMethods              = allowedRefOutMethods;
+        AllowedCtorInvocations            = allowedCtorInvocations;
+        BoolParameterAllowedMethods       = boolParameterAllowedMethods;
+        DowncastExcludedFilePatterns      = downcastExcludedFilePatterns;
+        DowncastExcludedNamespacePatterns = downcastExcludedNamespacePatterns;
     }
 
     /// <summary>設定ファイルなしのデフォルト。</summary>
@@ -79,6 +94,9 @@ internal sealed class GuardrailOptions
         s_defaultTestAttributes,
         s_defaultAssertionTypeNames,
         s_defaultAssertionMethodPatterns,
+        Array.Empty<string>(),
+        Array.Empty<string>(),
+        Array.Empty<string>(),
         Array.Empty<string>(),
         Array.Empty<string>());
 
@@ -119,11 +137,14 @@ internal sealed class GuardrailOptions
             if (root == null) return Default;
 
             return new GuardrailOptions(
-                testAttributes:          GetStringArray(root, "testMethodMustAssert",    "testAttributes")          ?? s_defaultTestAttributes,
-                assertionTypeNames:      GetStringArray(root, "testMethodMustAssert",    "assertionTypeNames")      ?? s_defaultAssertionTypeNames,
-                assertionMethodPatterns: GetStringArray(root, "testMethodMustAssert",    "assertionMethodPatterns") ?? s_defaultAssertionMethodPatterns,
-                allowedRefOutMethods:    GetStringArray(root, "noRefOutParameter",       "allowedMethods")          ?? Array.Empty<string>(),
-                allowedCtorInvocations:  GetStringArray(root, "constructorOnlyAssignments", "allowedInvocations")  ?? Array.Empty<string>());
+                testAttributes:                    GetStringArray(root, "testMethodMustAssert",       "testAttributes")            ?? s_defaultTestAttributes,
+                assertionTypeNames:                GetStringArray(root, "testMethodMustAssert",       "assertionTypeNames")        ?? s_defaultAssertionTypeNames,
+                assertionMethodPatterns:           GetStringArray(root, "testMethodMustAssert",       "assertionMethodPatterns")   ?? s_defaultAssertionMethodPatterns,
+                allowedRefOutMethods:              GetStringArray(root, "noRefOutParameter",          "allowedMethods")            ?? Array.Empty<string>(),
+                allowedCtorInvocations:            GetStringArray(root, "constructorOnlyAssignments", "allowedInvocations")       ?? Array.Empty<string>(),
+                boolParameterAllowedMethods:       GetStringArray(root, "boolParameter",             "allowedMethods")            ?? Array.Empty<string>(),
+                downcastExcludedFilePatterns:      GetStringArray(root, "noDowncast",                "excludedFilePatterns")      ?? Array.Empty<string>(),
+                downcastExcludedNamespacePatterns: GetStringArray(root, "noDowncast",                "excludedNamespacePatterns") ?? Array.Empty<string>());
         }
         catch
         {

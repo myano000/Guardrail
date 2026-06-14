@@ -2,7 +2,7 @@ root = true
 
 # ===========================================================
 # このプロジェクトは故意に Guardrail ポリシーに違反するコードを含みます。
-# severity = error のため、単体でビルドすると GRD001–GRD004 がビルドエラーになります。
+# severity = error のため、単体でビルドすると GRD001–GRD007 がビルドエラーになります。
 # それが「正しい挙動」です。
 #
 # 確認方法:
@@ -16,3 +16,6 @@ dotnet_diagnostic.GRD001.severity = error
 dotnet_diagnostic.GRD002.severity = error
 dotnet_diagnostic.GRD003.severity = error
 dotnet_diagnostic.GRD004.severity = error
+dotnet_diagnostic.GRD005.severity = error
+dotnet_diagnostic.GRD006.severity = error
+dotnet_diagnostic.GRD007.severity = error

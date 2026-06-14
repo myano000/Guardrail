@@ -19,5 +19,12 @@
   },
   "constructorOnlyAssignments": {
     "allowedInvocations": []
+  },
+  "boolParameter": {
+    "allowedMethods": ["That", "IsTrue", "IsFalse", "AreEqual"]
+  },
+  "noDowncast": {
+    "excludedFilePatterns": ["/Ui/"],
+    "excludedNamespacePatterns": []
   }
 }

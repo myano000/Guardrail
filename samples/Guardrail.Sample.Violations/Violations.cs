@@ -1,7 +1,7 @@
 // ====================================================================
 // Guardrail.Sample.Violations — 故意の違反コード
 //
-// このファイルをビルドすると GRD001–GRD004 がビルドエラーになります。
+// このファイルをビルドすると GRD001–GRD007 がビルドエラーになります。
 // .editorconfig で severity=error に設定しているため。
 //
 // 確認方法:
@@ -100,5 +100,92 @@ public class ViolationGrd004
     {
         var order = new ViolationGrd002(100);
         var _ = order.Value; // 何かを計算しているが assert していない
+    }
+}
+
+// ----------------------------------------------------------------
+// GRD005 違反: bool パラメータ（flag argument）を使っている
+// ----------------------------------------------------------------
+
+/// <summary>
+/// bool パラメータによって 1 つのメソッドが 2 つの振る舞いを持つ。
+/// 呼び出し側では Send(msg, true) と書くしかなく、意図が不明瞭。
+/// </summary>
+public static class ViolationGrd005
+{
+    // ← GRD005: bool パラメータ isUrgent
+    public static void Send(string message, bool isUrgent)
+        => Console.WriteLine(isUrgent ? $"[URGENT] {message}" : message);
+
+    // ← GRD005: bool? パラメータ
+    public static void Toggle(string feature, bool? enable)
+        => Console.WriteLine($"{feature}: {enable}");
+}
+
+// ----------------------------------------------------------------
+// GRD006 違反: ダウンキャストを使っている（UI層ではない）
+// ----------------------------------------------------------------
+
+public abstract class Shape { }
+public class Circle : Shape { public double Radius { get; set; } }
+public class Rectangle : Shape { public double Width { get; set; } }
+
+/// <summary>
+/// 型でスイッチする設計はオープン・クローズド原則に反する。
+/// 新しい Shape を追加するたびにこのクラスの修正が必要になる。
+/// </summary>
+public static class ViolationGrd006
+{
+    public static double GetArea(Shape shape)
+    {
+        // ← GRD006: ダウンキャスト（CastExpression）
+        if (shape is Circle)
+        {
+            var circle = (Circle)shape;
+            return Math.PI * circle.Radius * circle.Radius;
+        }
+
+        // ← GRD006: ダウンキャスト（AsExpression）
+        var rect = shape as Rectangle;
+        if (rect != null)
+            return rect.Width * rect.Width;
+
+        return 0;
+    }
+}
+
+// ----------------------------------------------------------------
+// GRD007 違反: 無意味な null チェック
+// ----------------------------------------------------------------
+
+/// <summary>
+/// new で生成したオブジェクトは常に非 null。
+/// それに対する null チェックは常に false/true になり意味がない。
+/// </summary>
+public static class ViolationGrd007
+{
+    // ← GRD007: new 直後に == null（常に false）
+    public static void PatternOne_DirectCheck()
+    {
+        if (new ViolationGrd002(0) == null) // 絶対に null にならない
+            Console.WriteLine("never reached");
+    }
+
+    // ← GRD007: new で初期化したローカルに != null チェック（常に true）
+    public static void PatternTwo_LocalVariable()
+    {
+        var order = new ViolationGrd002(100); // new で初期化
+        if (order != null) // ← order は絶対に null にならない
+        {
+            Console.WriteLine(order.Value);
+        }
+    }
+
+    // ← GRD007: is null パターン
+    public static void PatternTwo_IsNull()
+    {
+        var order = new ViolationGrd002(50);
+        if (order is null) // ← 絶対に true にならない
+            throw new InvalidOperationException("unreachable");
     }
 }
