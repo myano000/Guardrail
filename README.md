@@ -1,44 +1,43 @@
 # Guardrail
 
-**AIエージェント（バイブコーディング）の品質を、コンパイル時に自動で守るRoslynアナライザ集。**
+**A Roslyn analyzer collection that enforces coding policies at compile time — so AI agents fix their own mistakes.**
 
 ---
 
-## 背景：なぜGuardrailが必要か
+## Why Guardrail?
 
-CLAUDE.mdにコーディングポリシーを書いても、AIエージェントはたいてい忘れます。  
-その都度「bool引数はやめて」「ダウンキャストしないで」と指摘するのは、レビュアーの時間とストレスを消耗します。
+You write coding policies in CLAUDE.md. The AI agent ignores them by the next message.  
+You end up pointing out the same issues over and over: "stop using bool parameters", "don't downcast", "every test needs an assertion".
 
-Guardrailはその問題をコンパイラエラー／警告に変換します。  
-エージェントはエラーメッセージに書かれた**違反内容と修正方法**を読んで自己修正するため、  
-人間のレビューなしにコーディングポリシーが守られます。
+Guardrail turns those policies into **compiler warnings with built-in fix instructions**.  
+The agent reads the error message, self-corrects, and moves on — no human review required.
 
 ```
-Warning GRD005: パラメータ 'isUrgent' が bool です。
-  列挙型・メソッドの分割・オプション型で意図を表現してください。
+Warning GRD005: Parameter 'isUrgent' is of type bool.
+  Express intent using an enum, method overloads, or an options type instead.
 ```
 
-エージェントがこのエラーを受け取れば、あとはコーヒーを飲んでいるだけで済みます。
+Set up Guardrail once, then go get that coffee.
 
 ---
 
-## 現在実装済みのルール
+## Rules
 
-| ID     | ルール                         | 概要                                                                 |
-|--------|-------------------------------|----------------------------------------------------------------------|
-| GRD001 | コンストラクタは代入のみ         | コンストラクタ内にメソッド呼び出し・制御フローを書くと警告              |
-| GRD002 | インスタンスコンストラクタは1つまで | 複数コンストラクタはオーバーロード地獄の元。ファクトリメソッドで代替   |
-| GRD003 | ref / out 引数禁止              | 戻り値タプルや出力専用クラスで代替                                    |
-| GRD004 | テストメソッドはアサーション必須  | Assert/Should系なしのテストは「成功し続けるゾンビ」                   |
-| GRD005 | bool パラメータ禁止              | `Process(true)` は意味不明。列挙型かメソッド分割で表現               |
-| GRD006 | ダウンキャスト禁止               | `(Dog)animal` は実行時例外の元。ポリモーフィズムで代替               |
-| GRD007 | 無意味な null チェック禁止       | `new Foo() == null` は常にfalse。エージェントが防御的に書きがちな癖   |
+| ID     | Rule                              | What it catches                                                        |
+|--------|-----------------------------------|------------------------------------------------------------------------|
+| GRD001 | Constructor assignments only      | Method calls or control flow inside a constructor body                 |
+| GRD002 | Single instance constructor       | More than one constructor — use factory methods instead                |
+| GRD003 | No ref / out parameters           | `ref`/`out` params — return a tuple instead                            |
+| GRD004 | Test methods must assert          | Test methods with no assertion — they always pass and prove nothing    |
+| GRD005 | No bool parameters                | Flag arguments like `Process(true)` — intent is invisible at call site |
+| GRD006 | No downcasts                      | `(Dog)animal` or `animal as Cat` — use polymorphism                   |
+| GRD007 | No meaningless null checks        | `new Foo() == null` — agents write this defensively, it's always false |
 
 ---
 
-## クイックスタート
+## Quick Start
 
-### 1. アナライザをプロジェクトに追加
+### 1. Add the analyzer to your project
 
 ```xml
 <!-- .csproj -->
@@ -49,14 +48,14 @@ Warning GRD005: パラメータ 'isUrgent' が bool です。
 </ItemGroup>
 ```
 
-NuGetパッケージ版（準備中）:
+NuGet package (coming soon):
 ```
 dotnet add package Guardrail.Analyzers
 ```
 
-### 2. 設定ファイル（任意）
+### 2. Configuration (optional)
 
-プロジェクトルートに `guardrail.json` を置き、AdditionalFilesに追加すると挙動をカスタマイズできます。
+Place a `guardrail.json` file at the project root and register it as an additional file:
 
 ```xml
 <!-- .csproj -->
@@ -83,39 +82,37 @@ dotnet add package Guardrail.Analyzers
 }
 ```
 
-### 3. ビルドして確認
+### 3. Build
 
 ```bash
 dotnet build
 ```
 
-ポリシー違反はビルド時に警告として出力されます。`TreatWarningsAsErrors` を設定すればエラーに昇格できます。
+Violations appear as warnings. Promote them to errors to block the build:
 
 ```xml
 <PropertyGroup>
-  <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  <!-- または特定ルールだけ -->
   <WarningsAsErrors>GRD001;GRD002;GRD003;GRD004;GRD005;GRD006;GRD007</WarningsAsErrors>
 </PropertyGroup>
 ```
 
 ---
 
-## ルール詳細
+## Rule Reference
 
-### GRD001 — コンストラクタは代入のみ
+### GRD001 — Constructor assignments only
 
-コンストラクタ内の処理を代入に限定することで、オブジェクトのライフサイクルを透明にし、テスト容易性を高めます。
+Constructors should only assign fields and properties. Side effects and logic belong in factory methods.
 
 ```csharp
-// 違反
+// Violation
 public OrderService(ILogger logger)
 {
     _logger = logger;
-    _logger.Log("initialized");  // メソッド呼び出し → GRD001
+    _logger.Log("initialized");  // method call → GRD001
 }
 
-// 準拠
+// Compliant
 public OrderService(ILogger logger)
 {
     _logger = logger;
@@ -129,53 +126,53 @@ public static OrderService Create(ILogger logger)
 }
 ```
 
-### GRD002 — インスタンスコンストラクタは1つまで
+### GRD002 — Single instance constructor
 
-複数コンストラクタは呼び出し側が「どれを使うべきか」を把握しなければならず、依存関係が不透明になります。
+Multiple constructors force callers to know which one to use and obscure dependencies.
 
 ```csharp
-// 違反
+// Violation
 public class Report
 {
     public Report() { }
-    public Report(string title) { _title = title; }  // 2つ目 → GRD002
+    public Report(string title) { _title = title; }  // second constructor → GRD002
 }
 
-// 準拠
+// Compliant
 public class Report
 {
     private Report(string title) { _title = title; }
 
-    public static Report Untitled()        => new Report("");
-    public static Report WithTitle(string t) => new Report(t);
+    public static Report Untitled()           => new Report("");
+    public static Report WithTitle(string t)  => new Report(t);
 }
 ```
 
-### GRD003 — ref / out 引数禁止
+### GRD003 — No ref / out parameters
 
-`ref`/`out` は副作用を見えにくくします。戻り値タプルで複数値を返してください。
+`ref`/`out` make side effects invisible. Return a tuple instead.
 
 ```csharp
-// 違反
+// Violation
 bool TryParse(string s, out int result) { ... }  // GRD003
 
-// 準拠
+// Compliant
 (bool success, int result) TryParse(string s) { ... }
 ```
 
-### GRD004 — テストメソッドはアサーション必須
+### GRD004 — Test methods must assert
 
-アサーションのないテストはビルドが通り続けるだけで何も検証しません。
+A test with no assertion always passes. It is not a test; it is noise.
 
 ```csharp
-// 違反
+// Violation
 [Test]
 public void CalculateTotal_ReturnsValue()
 {
-    var result = _calc.Total();  // assertなし → GRD004
+    var result = _calc.Total();  // no assertion → GRD004
 }
 
-// 準拠
+// Compliant
 [Test]
 public void CalculateTotal_ReturnsExpectedSum()
 {
@@ -184,86 +181,86 @@ public void CalculateTotal_ReturnsExpectedSum()
 }
 ```
 
-### GRD005 — bool パラメータ禁止（flag argument）
+### GRD005 — No bool parameters (flag arguments)
 
-`Send(message, true)` の `true` が何を意味するか、呼び出し側だけを見ても分かりません。
+`Send(message, true)` — what does `true` mean? The caller cannot tell without reading the implementation.
 
 ```csharp
-// 違反
+// Violation
 void Send(string message, bool isUrgent) { ... }  // GRD005
 
-// 準拠（列挙型で意図を表現）
+// Compliant — express intent with an enum
 void Send(string message, Priority priority) { ... }
 
-// 準拠（メソッドを分割）
+// Compliant — split into separate methods
 void Send(string message) { ... }
 void SendUrgent(string message) { ... }
 ```
 
-### GRD006 — ダウンキャスト禁止
+### GRD006 — No downcasts
 
-ダウンキャストは型システムの保証を破り、`InvalidCastException` の原因になります。
+Downcasts break the type system's guarantees and are a common source of `InvalidCastException`.
 
 ```csharp
-// 違反
+// Violation
 Animal a = GetAnimal();
 var dog = (Dog)a;    // GRD006
 var cat = a as Cat;  // GRD006
 
-// 準拠
-animal.Speak();           // ポリモーフィズム
-animal.Accept(visitor);   // Visitor パターン
+// Compliant
+animal.Speak();           // polymorphism
+animal.Accept(visitor);   // Visitor pattern
 ```
 
-UIフレームワーク等でどうしても必要な場合は `guardrail.json` の `excludedFilePatterns` で除外できます。
+UI frameworks sometimes require downcasts. Use `excludedFilePatterns` in `guardrail.json` to opt out specific paths.
 
-### GRD007 — 無意味な null チェック禁止
+### GRD007 — No meaningless null checks
 
-`new` は常に非nullを返します。AIエージェントが防御的に書きがちなパターンを検出します。
+`new` never returns null. AI agents write defensive null checks after object creation — Guardrail catches this pattern.
 
 ```csharp
-// 違反
+// Violation
 var order = new Order();
-if (order == null) { ... }  // GRD007: order は null になれない
+if (order == null) { ... }    // GRD007: order can never be null
 
-// 違反
-if (new Foo() != null) { ... }  // GRD007: 常に true
+// Violation
+if (new Foo() != null) { ... } // GRD007: always true
 
-// 準拠
+// Compliant
 Order? order = GetOrderOrNull();
-if (order == null) { ... }  // 外部から受け取った値 → 正当なチェック
+if (order == null) { ... }     // received from outside — check is valid
 ```
 
 ---
 
-## 将来の展開
+## Roadmap
 
-現在はC# (Roslyn) のみですが、同じ考え方はほかの言語にも適用できます。
+Guardrail starts with C# and Roslyn, but the concept applies everywhere AI agents write code.
 
-- **未使用プロパティ・変数の検知** — エージェントが「とりあえず追加」したコードの除去
-- **JavaScript / TypeScript** — ESLintカスタムルールで同様のポリシー適用
-- **Python** — flake8 / pylint プラグイン
+- **Unused properties and variables** — catch dead code agents leave behind
+- **JavaScript / TypeScript** — ESLint custom rules with the same philosophy
+- **Python** — flake8 / pylint plugins
 
-バイブコーディングのガードレールを言語・エコシステムを問わず整備していく予定です。
+The goal is a language-agnostic guardrail layer for vibe coding.
 
 ---
 
-## 開発
+## Development
 
 ```bash
-# ビルド
+# Build
 dotnet build Guardrail.sln
 
-# テスト
+# Test
 dotnet test
 
-# サンプル（準拠コード）
+# Sample — compliant code (no warnings)
 dotnet build samples/Guardrail.Sample/Guardrail.Sample.csproj
 
-# サンプル（違反コード — 警告が出ることを確認）
+# Sample — violations (warnings expected)
 dotnet build samples/Guardrail.Sample.Violations/Guardrail.Sample.Violations.csproj
 ```
 
-## ライセンス
+## License
 
 MIT
