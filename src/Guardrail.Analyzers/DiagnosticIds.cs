@@ -24,6 +24,9 @@ internal static class DiagnosticIds
     /// <summary>GRD007: 無意味な null チェック禁止（new 直後の null 判定等）。</summary>
     public const string MeaninglessNullCheck       = "GRD007";
 
+    /// <summary>GRD008: bool を偽装した enum 禁止（TRUE/FALSE, YES/NO 等）。</summary>
+    public const string BooleanDisguisedAsEnum     = "GRD008";
+
     /// <summary>全ルール共通カテゴリ。</summary>
     public const string Category = "Guardrail";
 }
