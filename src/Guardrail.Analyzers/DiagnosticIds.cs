@@ -27,6 +27,9 @@ internal static class DiagnosticIds
     /// <summary>GRD008: bool を偽装した enum 禁止（TRUE/FALSE, YES/NO 等）。</summary>
     public const string BooleanDisguisedAsEnum     = "GRD008";
 
+    /// <summary>GRD009: メソッドが長すぎる。責務を見直し分割を検討。</summary>
+    public const string MethodTooLong              = "GRD009";
+
     /// <summary>全ルール共通カテゴリ。</summary>
     public const string Category = "Guardrail";
 }

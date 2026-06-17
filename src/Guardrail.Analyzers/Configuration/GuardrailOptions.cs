@@ -17,6 +17,9 @@ internal sealed class GuardrailOptions
     // デフォルト値
     // ----------------------------------------------------------------
 
+    private const int DefaultMethodMaxStatements = 30;
+    private const int DefaultMethodMaxLines      = 40;
+
     private static readonly string[] s_defaultTestAttributes =
     [
         "Test", "TestCase", "TestCaseSource",   // NUnit
@@ -65,6 +68,12 @@ internal sealed class GuardrailOptions
     /// <summary>ダウンキャストを除外する名前空間のパターン（部分一致、大小無視）。</summary>
     public IReadOnlyList<string> DowncastExcludedNamespacePatterns { get; }
 
+    /// <summary>メソッドの最大ステートメント数。これを超えると GRD009 が発火する。</summary>
+    public int MethodMaxStatements { get; }
+
+    /// <summary>メソッドの最大物理行数。これを超えると GRD009 が発火する。</summary>
+    public int MethodMaxLines { get; }
+
     // ----------------------------------------------------------------
     // コンストラクタ
     // ----------------------------------------------------------------
@@ -77,7 +86,9 @@ internal sealed class GuardrailOptions
         IReadOnlyList<string> allowedCtorInvocations,
         IReadOnlyList<string> boolParameterAllowedMethods,
         IReadOnlyList<string> downcastExcludedFilePatterns,
-        IReadOnlyList<string> downcastExcludedNamespacePatterns)
+        IReadOnlyList<string> downcastExcludedNamespacePatterns,
+        int methodMaxStatements,
+        int methodMaxLines)
     {
         TestAttributes                    = testAttributes;
         AssertionTypeNames                = assertionTypeNames;
@@ -87,6 +98,8 @@ internal sealed class GuardrailOptions
         BoolParameterAllowedMethods       = boolParameterAllowedMethods;
         DowncastExcludedFilePatterns      = downcastExcludedFilePatterns;
         DowncastExcludedNamespacePatterns = downcastExcludedNamespacePatterns;
+        MethodMaxStatements               = methodMaxStatements;
+        MethodMaxLines                    = methodMaxLines;
     }
 
     /// <summary>設定ファイルなしのデフォルト。</summary>
@@ -98,7 +111,9 @@ internal sealed class GuardrailOptions
         Array.Empty<string>(),
         Array.Empty<string>(),
         Array.Empty<string>(),
-        Array.Empty<string>());
+        Array.Empty<string>(),
+        DefaultMethodMaxStatements,
+        DefaultMethodMaxLines);
 
     // ----------------------------------------------------------------
     // ロード
@@ -144,7 +159,9 @@ internal sealed class GuardrailOptions
                 allowedCtorInvocations:            GetStringArray(root, "constructorOnlyAssignments", "allowedInvocations")       ?? Array.Empty<string>(),
                 boolParameterAllowedMethods:       GetStringArray(root, "boolParameter",             "allowedMethods")            ?? Array.Empty<string>(),
                 downcastExcludedFilePatterns:      GetStringArray(root, "noDowncast",                "excludedFilePatterns")      ?? Array.Empty<string>(),
-                downcastExcludedNamespacePatterns: GetStringArray(root, "noDowncast",                "excludedNamespacePatterns") ?? Array.Empty<string>());
+                downcastExcludedNamespacePatterns: GetStringArray(root, "noDowncast",                "excludedNamespacePatterns") ?? Array.Empty<string>(),
+                methodMaxStatements:               GetInt(root, "methodLength", "maxStatements")     ?? DefaultMethodMaxStatements,
+                methodMaxLines:                    GetInt(root, "methodLength", "maxLines")          ?? DefaultMethodMaxLines);
         }
         catch
         {
@@ -166,5 +183,21 @@ internal sealed class GuardrailOptions
             return null;
 
         return list.OfType<string>().ToArray();
+    }
+
+    private static int? GetInt(
+        Dictionary<string, object?> root,
+        string sectionKey,
+        string key)
+    {
+        if (!root.TryGetValue(sectionKey, out var sectionObj) ||
+            sectionObj is not Dictionary<string, object?> section)
+            return null;
+
+        if (!section.TryGetValue(key, out var valueObj) ||
+            valueObj is not double d)
+            return null;
+
+        return (int)d;
     }
 }

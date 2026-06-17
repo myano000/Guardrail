@@ -1,7 +1,7 @@
 // ====================================================================
 // Guardrail.Sample.Violations — 故意の違反コード
 //
-// このファイルをビルドすると GRD001–GRD007 がビルドエラーになります。
+// このファイルをビルドすると GRD001–GRD009 がビルドエラーになります。
 // .editorconfig で severity=error に設定しているため。
 //
 // 確認方法:
@@ -187,5 +187,54 @@ public static class ViolationGrd007
         var order = new ViolationGrd002(50);
         if (order is null) // ← 絶対に true にならない
             throw new InvalidOperationException("unreachable");
+    }
+}
+
+// ----------------------------------------------------------------
+// GRD009 違反: メソッドが長すぎる（責務を見直し分割を検討）
+// ----------------------------------------------------------------
+
+/// <summary>
+/// 注文処理・在庫確認・配送手配・通知送信・ログ記録を 1 つのメソッドで行っている。
+/// AI は指示しなければ同じメソッドに処理を追加し続けるため、
+/// しきい値を超えたタイミングで分割を促す必要がある。
+/// </summary>
+public static class ViolationGrd009
+{
+    // ← GRD009: 31 ステートメント以上のメソッド（デフォルトしきい値 30 を超える）
+    public static void ProcessOrder(string orderId)
+    {
+        // --- 注文検証フェーズ ---
+        if (string.IsNullOrWhiteSpace(orderId)) throw new ArgumentException("orderId is required");
+        var normalized = orderId.Trim().ToUpperInvariant();
+        Console.WriteLine($"[検証] orderId={normalized}");
+
+        // --- 在庫確認フェーズ ---
+        var stock = 10; // 実際はリポジトリ呼び出し
+        if (stock <= 0) throw new InvalidOperationException("在庫不足");
+        Console.WriteLine($"[在庫] 残数={stock}");
+        var reserved = stock - 1;
+        Console.WriteLine($"[在庫] 引き当て後={reserved}");
+
+        // --- 価格計算フェーズ ---
+        var unitPrice = 1000m;
+        var quantity  = 1;
+        var subtotal  = unitPrice * quantity;
+        var tax       = subtotal * 0.1m;
+        var total     = subtotal + tax;
+        Console.WriteLine($"[価格] 小計={subtotal} 税={tax} 合計={total}");
+
+        // --- 配送手配フェーズ ---
+        var shippingCode = $"SHIP-{normalized}";
+        Console.WriteLine($"[配送] コード={shippingCode}");
+        var estimatedDays = 3;
+        Console.WriteLine($"[配送] 推定日数={estimatedDays}");
+
+        // --- 通知送信フェーズ ---
+        var message = $"注文 {normalized} が確定しました。合計: {total:C}";
+        Console.WriteLine($"[通知] {message}");
+
+        // --- ログ記録フェーズ ---
+        Console.WriteLine($"[ログ] {DateTime.UtcNow:O} ORDER_CONFIRMED id={normalized} total={total}");
     }
 }

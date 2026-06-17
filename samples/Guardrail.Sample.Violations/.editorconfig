@@ -19,3 +19,5 @@ dotnet_diagnostic.GRD004.severity = error
 dotnet_diagnostic.GRD005.severity = error
 dotnet_diagnostic.GRD006.severity = error
 dotnet_diagnostic.GRD007.severity = error
+dotnet_diagnostic.GRD008.severity = error
+dotnet_diagnostic.GRD009.severity = error

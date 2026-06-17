@@ -26,5 +26,9 @@
   "noDowncast": {
     "excludedFilePatterns": ["/Ui/"],
     "excludedNamespacePatterns": []
+  },
+  "methodLength": {
+    "maxStatements": 30,
+    "maxLines": 40
   }
 }
